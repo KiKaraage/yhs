@@ -93,7 +93,7 @@ main() (
                 # value: GKeyFile preserves trailing whitespace (g_strndup to
                 # end of line), so `Branch=stable ` names branch "stable "
                 # and the remote check must catch that. Fail closed when the
-                # last value is empty. See projectbluefin/finpilot#509 #513.
+                # last value is empty. See upstream #509 #513.
                 found && /^[[:space:]]*Branch[[:space:]]*=/ {
                     val = $0
                     sub(/^[^=]*=/, "", val)

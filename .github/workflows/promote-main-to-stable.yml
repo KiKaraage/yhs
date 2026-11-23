@@ -16,7 +16,7 @@ on:
   # Promote only after the image has built, never on the push itself.
   # build-image.yml also fires on push to main and publishes :testing; with a
   # push trigger this workflow could start the release gate before this commit's
-  # build finished, so the gate verified a stale :testing image (finpilot #753).
+  # build finished, so the gate verified a stale :testing image (upstream #753).
   # workflow_run fires after "Build and Push Image" finishes, and branches:[main]
   # keeps it to real pushes to main. The schedule and workflow_dispatch paths are
   # kept so the promotion still runs on its daily window and on demand.
@@ -73,7 +73,7 @@ jobs:
       # `use_merge_queue`: `auto_merge` states how the PR is merged at all.
       # It defaults to true, so without this the body advertises an auto-merge
       # schedule (bluefin/dakota Tuesday, bluefin-lts Thursday) that never runs
-      # here — finpilot is a personal fork merged by hand. Operators waiting for
+      # here — yhs is a personal fork merged by hand. Operators waiting for
       # that auto-merge never see one, so set it false to match the manual merge
       # below. Enrollment stays governed separately by enqueue_promotion.
       auto_merge: false

@@ -225,7 +225,7 @@ jobs:
       # The release path downloads this artifact instead of scanning the
       # promoted image inline. Scanning inline pulls and unpacks the ~3 GB
       # image on a bare ubuntu-24.04 runner, where the runner is evicted
-      # before the scan finishes (finpilot #678) and the release ships an
+      # before the scan finishes (upstream #678) and the release ships an
       # empty package list. Scan the already-built local image here: it lives
       # in the btrfs podman storage this build already used, so syft reads the
       # layers without a second pull and stays well under the memory limit.
@@ -271,7 +271,7 @@ jobs:
 
       # Bind the SBOM to the exact digest pushed above. The release downloads
       # this artifact and must attach the inventory to the promoted image, not
-      # the newest build (finpilot #681 review): record the pushed digest inside
+      # the newest build (upstream #681 review): record the pushed digest inside
       # the artifact so the release can reject any run whose SBOM describes a
       # different image, then upload the whole sbom-current/ directory.
       - name: Record SBOM image digest
@@ -293,7 +293,7 @@ jobs:
         continue-on-error: true
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: sbom-finpilot
+          name: sbom-yhs
           path: sbom-current/
           if-no-files-found: error
           retention-days: 90
