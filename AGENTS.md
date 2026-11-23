@@ -2,6 +2,10 @@
 
 Working notes for agents in this repository. `overview` maps how the image is assembled and says which skill covers what; the procedures live under `.agents/skills/`.
 
+## Scope
+
+The point of this repo is plain: ship a bootc image, porting a desktop environment suite for personal use. Keep the framing & mentions lowkey and the notes light (especially in PRs).
+
 ## Gates
 
 These hold for every change:
