@@ -1,8 +1,6 @@
 # Build scripts
 
-Scripts that run during image assembly. The Containerfile names each one in its
-own `RUN` block, so the order is whatever the Containerfile says — there is no
-prefix auto-discovery. The numbers communicate intent.
+Scripts that run during image assembly. The Containerfile names each one in its own `RUN` block, so the order is whatever the Containerfile says; there is no prefix auto-discovery. The numbers communicate intent.
 
 ## Phases
 
@@ -13,21 +11,18 @@ prefix auto-discovery. The numbers communicate intent.
 | `20-packages-and-services.sh` | Installs the default RPM and COPR packages and enables their services. Packages live here, not in the overlay phase, so an overlay edit cannot invalidate the package layer. |
 | `90-cleanup.sh` | Finalises package and Flatpak sources, prunes build artifacts, and prepares for `bootc container lint`. |
 
-Helpers, not phases: `copr-helpers.sh` (sourced), `validate-brewfiles.sh`, and
-`validate-flatpaks.sh` (called by the Justfile and CI).
+Helpers, not phases: `copr-helpers.sh` (sourced), `validate-brewfiles.sh`, and `validate-flatpaks.sh` (called by the Justfile and CI).
 
 ## Examples
 
 Inactive until you activate them:
 
-- `30-tailscale.sh.example` — a third-party RPM repository done safely
-- `40-gnome-extensions.sh.example` — GNOME Shell extensions with a dconf override
-- `50-nvidia.sh.example` — NVIDIA drivers and CDI container support
-- `60-desktop-swap.sh.example` — replacing the GNOME desktop
+- `30-tailscale.sh.example`: a third-party RPM repository done safely
+- `40-gnome-extensions.sh.example`: GNOME Shell extensions with a dconf override
+- `50-nvidia.sh.example`: NVIDIA drivers and CDI container support
+- `60-desktop-swap.sh.example`: replacing the GNOME desktop
 
-To activate one, rename it off `.example` and add a `RUN` block to the
-Containerfile after the package phase and before the cleanup phase. Copy the
-shape below and substitute your script's path:
+To activate one, rename it off `.example` and add a `RUN` block to the Containerfile after the package phase and before the cleanup phase. Copy the shape below and substitute your script's path:
 
 ```dockerfile
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
@@ -51,8 +46,5 @@ dnf5 install -y package-name
 
 - Scripts run as root, with the build context at `/ctx`.
 - Use `dnf5`, never `dnf` or `yum`, and always `-y`.
-- Disable any repository you enable. `copr_install_isolated` does it for COPRs.
-  As a backstop, `90-cleanup.sh` disables every `/etc/yum.repos.d/*.repo` that
-  no installed RPM owns, and fails the build if one stays enabled. There is no
-  opt-out: a vendor repository cannot stay enabled in the shipped image.
+- Disable any repository you enable. `copr_install_isolated` does it for COPRs. As a backstop, `90-cleanup.sh` disables every `/etc/yum.repos.d/*.repo` that no installed RPM owns, and fails the build if one stays enabled. There is no opt-out: a vendor repository cannot stay enabled in the shipped image.
 - Keep one purpose per script, and name it for that purpose.
