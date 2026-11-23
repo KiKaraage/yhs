@@ -90,7 +90,7 @@ EOF
 @test "validator fails closed on an empty Branch= value" {
     # Regression: an empty `Branch=` used to satisfy /^Branch=/ and pass,
     # letting flatpak resolve against the remote default branch instead of
-    # failing closed. See projectbluefin/finpilot#504.
+    # failing closed. See upstream #504.
     cat > "${FIXTURES}/base.preinstall" <<'EOF'
 [Flatpak Preinstall org.gnome.Calculator]
 Branch=
@@ -111,7 +111,7 @@ EOF
 @test "validator accepts key-side whitespace around the = (GKeyFile strips it)" {
     # GKeyFile strips the whitespace around the key and the `=` before
     # comparing, so `Branch = stable` is the key Branch and must not be
-    # reported as missing. See projectbluefin/finpilot#509.
+    # reported as missing. See upstream #509.
     cat > "${FIXTURES}/base.preinstall" <<'EOF'
 [Flatpak Preinstall org.gnome.Calculator]
 Branch = stable
@@ -126,7 +126,7 @@ EOF
     # `Branch=stable ` names the branch "stable " (with the trailing space),
     # which flatpak cannot resolve. The branch is now checked on the remote,
     # so this fails instead of resolving against the default branch and
-    # passing. See projectbluefin/finpilot#513.
+    # passing. See upstream #513.
     printf '[Flatpak Preinstall org.gnome.Calculator]\nBranch=stable \n' > "${FIXTURES}/base.preinstall"
     run bash "${SCRIPT}" "${FIXTURES}"
     [ "${status}" -eq 1 ]
@@ -139,7 +139,7 @@ EOF
 @test "validator takes the last Branch= of a duplicate (GKeyFile last-wins)" {
     # For a duplicate key GKeyFile uses the last value, not the first, so the
     # later `Branch=stable` must win over the earlier `Branch=old`. See
-    # projectbluefin/finpilot#509.
+    # upstream #509.
     cat > "${FIXTURES}/base.preinstall" <<'EOF'
 [Flatpak Preinstall org.gnome.Calculator]
 Branch=old
@@ -152,7 +152,7 @@ EOF
 
 @test "validator fails closed when the last of duplicate Branch= is empty" {
     # GKeyFile last-wins also means an empty final value fails closed, even
-    # though an earlier value was non-empty. See projectbluefin/finpilot#509.
+    # though an earlier value was non-empty. See upstream #509.
     cat > "${FIXTURES}/base.preinstall" <<'EOF'
 [Flatpak Preinstall org.gnome.Calculator]
 Branch=stable
@@ -164,7 +164,7 @@ EOF
 }
 
 @test "validator fails when the Branch value does not exist on the remote" {
-    # Regression (projectbluefin/finpilot#513): Branch= was only echoed in
+    # Regression (upstream #513): Branch= was only echoed in
     # the PASS line, so a non-empty but nonexistent branch (e.g. Branch=nope)
     # passed because remote-info was called with the app-id alone and
     # resolved against the remote default branch. remote-info is now called

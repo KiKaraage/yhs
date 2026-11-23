@@ -1,7 +1,7 @@
-export IMAGE_NAME := env("IMAGE_NAME", "finpilot")
+export IMAGE_NAME := env("IMAGE_NAME", "yhs")
 export DEFAULT_TAG := env("DEFAULT_TAG", "stable")
 export PODMAN := env("PODMAN", "podman")
-export REPO_ORG := env("GITHUB_REPOSITORY_OWNER", "projectbluefin")
+export REPO_ORG := env("GITHUB_REPOSITORY_OWNER", "kikaraage")
 export bib_image := env("BIB_IMAGE", "ghcr.io/osbuild/bootc-image-builder:latest@sha256:3bbd28cc2be21d2cf79e0f1110cfb505addbe0afcbe177d48d96d74a5726e08c")
 export qemu_image := env("QEMU_IMAGE", "ghcr.io/qemus/qemu:7.50@sha256:e7f6fda52503a546fd649670ba46e4bc23dc6dcef275bc3fac48877fbbc430df")
 export vm_ram := env("VM_RAM", "8192")
@@ -137,7 +137,7 @@ sudoif command *args:
 # registry already has that version, and a clean worktree also stamps the short
 # HEAD SHA.
 #
-# Example: just build finpilot stable-testing
+# Example: just build yhs stable-testing
 
 # Build the image using the specified parameters
 [group('Image')]
@@ -274,7 +274,7 @@ tag-images $image_name="" $default_tag="" $tags="":
 # rootful, so CI runs `sudo -E just sbom`. build-image.yml and pr-build.yml both
 # call this recipe, so the PR check scans exactly the way main does (#686).
 #
-# Example: sudo -E just sbom finpilot stable
+# Example: sudo -E just sbom yhs stable
 
 # Generate the SBOM for a locally built image
 [group('Image')]
