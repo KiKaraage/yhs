@@ -47,6 +47,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+          submodules: true
 
       # Build inputs: the Containerfile, the Justfile that drives the build
       # and the package scan, the build/ and custom/ trees the Containerfile
@@ -71,7 +72,7 @@ jobs:
           build=0
           while IFS= read -r f; do
             case "${f}" in
-              Containerfile | Justfile | .dockerignore | build/* | custom/* | .github/workflows/pr-build.yml | .github/workflows/build-image.yml)
+              Containerfile | Justfile | .dockerignore | build/* | custom/* | config/packages.env | image-versions.yml | .github/workflows/pr-build.yml | .github/workflows/build-image.yml)
                 echo "Build input changed: ${f}"
                 build=1
                 ;;

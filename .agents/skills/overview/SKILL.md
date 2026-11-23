@@ -63,3 +63,13 @@ Changes stay in this repository. `ublue-os/*` is read-only.
 ## Pinned Luma upstream
 
 `upstream/luma` is a git submodule pinned to `9aba58ff`, an unmodified checkout of `https://github.com/SimplyLuma/luma.git`. yhs consumes Luma as a pinned upstream dependency and never forks it. Image builds read Luma's install and configure scripts from this checkout. Change yhs behaviour in this repository, not inside the submodule.
+
+yhs changes to Luma live under `overlay/luma/`, mirrored path for path. `scripts/stage-luma.sh` copies the pinned submodule into `build/luma-stage` and applies the overlay on top, so both the RPM builder and the image build see one coherent source tree. The submodule itself is never edited.
+
+## Pinned images
+
+Following the Aurora pattern, `image-versions.yml` is the single source of truth for external base and context images. Each `Containerfile` `FROM` carries the exact `image:tag@digest` from that file, and `tests/contract/identity_test.bats` fails when they drift. Renovate moves the digests; scripts only read them. The base is `quay.io/fedora/fedora-bootc:45`, not a Silverblue OSTree desktop.
+
+## Package image
+
+`packages/Containerfile` defines a `scratch` image holding only `createrepo_c` output. `build-packages.yml` publishes it to `ghcr.io/kikaraage/yhs-packages`, signs `repomd.xml` and the image with keyless cosign, and records the digest in `config/packages.env`. The image build consumes that pin, so package and image workflows have disjoint path filters and cannot loop.

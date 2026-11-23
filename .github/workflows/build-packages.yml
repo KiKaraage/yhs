@@ -1,0 +1,192 @@
+---
+name: Build packages image
+
+# Package and image workflows have disjoint path filters. This workflow owns
+# packages/**, overlay/luma/**, scripts/** and the Luma gitlink; the image
+# workflow owns everything else, including config/packages.env. Publishing a
+# package image commits a new digest there, which triggers exactly one image
+# build and never this workflow again.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/**'
+      - 'overlay/luma/**'
+      - 'scripts/**'
+      - 'upstream/luma'
+      - '.github/workflows/build-packages.yml'
+  workflow_dispatch:
+    inputs:
+      rebuild_all:
+        description: Rebuild every Luma package instead of only changed ones
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  IMAGE_REF: ghcr.io/${{ github.repository_owner }}/yhs-packages
+
+jobs:
+  rpms:
+    name: Rebuild changed RPMs
+    runs-on: ubuntu-24.04
+    container:
+      image: registry.fedoraproject.org/fedora@sha256:62d5eaec1e8a34f6cb94934f806420754611834c7eef8a4f50b9cdbcd1c90c10 # 45
+    env:
+      LUMA_TARGET_ARCHITECTURE: x86_64
+      LUMA_RPM_BUILDER_DIRECT: '1'
+      RPM_BUILD_NCPUS: '2'
+    steps:
+      - name: Install build tools
+        run: dnf5 -y install git cpio curl patch rpm-build rpmdevtools dnf5-plugins python3 findutils
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Stage Luma with the yhs overlay
+        shell: bash
+        run: bash scripts/stage-luma.sh build/luma-stage
+
+      - name: Resolve build scripts
+        id: scripts
+        shell: bash
+        env:
+          BEFORE: ${{ github.event.before }}
+          REBUILD_ALL: ${{ inputs.rebuild_all }}
+        run: |
+          set -euo pipefail
+          stage=build/luma-stage
+          if [[ "${REBUILD_ALL}" == "true" ]]; then
+            mapfile -t changed < <(find "$stage/scripts/packages" -maxdepth 1 -name 'build-*.sh' -printf '%f\n' | sort)
+          elif [[ -n "${BEFORE}" && "${BEFORE}" =~ ^[0-9a-f]{40}$ ]]; then
+            mapfile -t changed < <(
+              git diff --name-only "${BEFORE}" HEAD -- 'overlay/luma/**' |
+                sed -n 's|^overlay/luma/scripts/packages/\(build-[^/]*\.sh\)$|\1|p' |
+                sort -u
+            )
+          else
+            changed=()
+          fi
+          printf '%s\n' "${changed[@]}" | sed '/^$/d' > build/rebuild-list.txt
+          if [[ -s build/rebuild-list.txt ]]; then
+            echo "run=yes" >> "${GITHUB_OUTPUT}"
+            echo "Rebuilding: $(paste -sd' ' build/rebuild-list.txt)" | tee -a "${GITHUB_STEP_SUMMARY}"
+          else
+            echo "run=no" >> "${GITHUB_OUTPUT}"
+            echo "No package build scripts changed." | tee -a "${GITHUB_STEP_SUMMARY}"
+          fi
+
+      - name: Rebuild packages
+        if: steps.scripts.outputs.run == 'yes'
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r script; do
+            [[ -n "$script" ]] || continue
+            echo "::group::${script}"
+            bash "build/luma-stage/scripts/packages/${script}"
+            echo "::endgroup::"
+          done < build/rebuild-list.txt
+
+      - name: Collect RPMs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/new-rpms
+          find build/luma-stage/build/packages -type f -name '*.rpm' \
+            -exec cp -n -t build/new-rpms {} + 2>/dev/null || true
+          echo "Collected $(find build/new-rpms -name '*.rpm' | wc -l) RPMs."
+
+      - name: Upload RPMs
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: yhs-rpms
+          path: build/new-rpms/*.rpm
+          if-no-files-found: warn
+          retention-days: 7
+
+  publish:
+    name: Publish package image
+    needs: rpms
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
+    steps:
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq podman createrepo-c
+          sudo curl -fsSL https://github.com/sigstore/cosign/releases/latest/download/cosign-linux-amd64 \
+            -o /usr/local/bin/cosign
+          sudo chmod +x /usr/local/bin/cosign
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          token: ${{ secrets.RENOVATE_TOKEN }}
+
+      - name: Check push token
+        env:
+          TOKEN: ${{ secrets.RENOVATE_TOKEN }}
+        run: |
+          if [ -z "${TOKEN}" ]; then
+            echo "::error::RENOVATE_TOKEN is required to commit the package digest pin."
+            exit 1
+          fi
+
+      - name: Download rebuilt RPMs
+        uses: actions/download-artifact@fa0a91b85d4f400e5d66aae7d568cd7e9ff2e461 # v4.1.1
+        with:
+          name: yhs-rpms
+          path: build/new-rpms
+
+      - name: Seed from the previous package image
+        shell: bash
+        env:
+          PACKAGES_REF: ${{ env.IMAGE_REF }}
+        run: |
+          set -euo pipefail
+          mkdir -p build/all-rpms
+          . config/packages.env
+          if [[ "${YHS_PACKAGES_DIGEST}" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+            podman pull --quiet "${PACKAGES_REF}@${YHS_PACKAGES_DIGEST}"
+            podman create --name yhs-extract "${PACKAGES_REF}@${YHS_PACKAGES_DIGEST}" /extract >/dev/null
+            podman cp yhs-extract:/Packages/. build/all-rpms/ || true
+            podman rm -f yhs-extract >/dev/null
+          fi
+          cp -n build/new-rpms/*.rpm build/all-rpms/ 2>/dev/null || true
+          echo "Repository will contain $(find build/all-rpms -name '*.rpm' | wc -l) RPMs."
+
+      - name: Build, push and sign the package image
+        shell: bash
+        env:
+          PACKAGES_REF: ${{ env.IMAGE_REF }}
+        run: bash scripts/build-packages.sh --rpm-dir build/all-rpms --image-ref "${PACKAGES_REF}" --push --sign
+
+      - name: Commit the digest pin
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'KiKaraage'
+          git config user.email 'kikaraage@tuta.io'
+          git add config/packages.env
+          if git diff --cached --quiet; then
+            echo "Digest unchanged." | tee -a "${GITHUB_STEP_SUMMARY}"
+            exit 0
+          fi
+          git commit -m 'chore: pin new yhs-packages digest' \
+            -m 'Assisted-by: Hy3 via CodeBuddy in T3 Code'
+          git push
+          echo "Pinned the new package digest in config/packages.env." | tee -a "${GITHUB_STEP_SUMMARY}"
