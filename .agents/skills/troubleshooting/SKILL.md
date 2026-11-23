@@ -27,6 +27,7 @@ CI runs the same checks; running them locally only makes the pull request quiet.
 | a third-party repository is live in the final image | a script enabled it and did not disable it | use `copr_install_isolated`, or disable it explicitly |
 | the package layer rebuilds on every overlay edit | packages drifted into the overlay phase | keep packages in `20-packages-and-services.sh` |
 | hadolint flags the Containerfile | a rule in `.github/hadolint.yaml` | fix it, or add a suppression with a reason |
+| `dnf5 ...` rejects a subcommand such as `config-manager` or `copr` | the Fedora base image ships bare `dnf5`; the plugin subcommands live in the `dnf5-plugins` package | install `dnf5-plugins` before the phase that calls a plugin subcommand, as the `Containerfile` does before setting dnf options |
 
 ## CI
 

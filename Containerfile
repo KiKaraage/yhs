@@ -78,6 +78,14 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     /ctx/build/00-image-info.sh
 
 # Set dnf options before build scripts (persists across subsequent RUN layers)
+#
+# dnf5's plugin subcommands (config-manager, copr, ...) ship in the dnf5-plugins
+# package, which the base image does not install, so install it before any of
+# them runs: the options below configure the build, and later phases enable COPRs
+# through the same plugin.
+RUN --mount=type=cache,dst=/var/cache/libdnf5 \
+    dnf5 install -y dnf5-plugins
+
 RUN cp /etc/dnf/dnf.conf /etc/dnf/dnf.conf.tmp \
     && mv /etc/dnf/dnf.conf.tmp /etc/dnf/dnf.conf \
     && dnf5 config-manager setopt keepcache=1 install_weak_deps=0
