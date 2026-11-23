@@ -59,3 +59,7 @@ The template consumes Project Bluefin's shared infrastructure rather than copyin
 - `ublue-os/brew`: the Homebrew integration
 
 Changes stay in this repository. `ublue-os/*` is read-only.
+
+## Pinned Luma upstream
+
+`upstream/luma` is a git submodule pinned to `9aba58ff`, an unmodified checkout of `https://github.com/SimplyLuma/luma.git`. yhs consumes Luma as a pinned upstream dependency and never forks it. Image builds read Luma's install and configure scripts from this checkout. Change yhs behaviour in this repository, not inside the submodule.
