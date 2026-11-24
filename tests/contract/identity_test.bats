@@ -59,3 +59,39 @@ assert_same_name() {
     run grep -F "$(image_name)" "${REPO_ROOT}/.github/workflows/clean.yml"
     [ "$status" -ne 0 ]
 }
+
+# Aurora-style pin file: image-versions.yml is the single source of truth for
+# external images. Every Containerfile FROM must carry the exact image:tag@digest
+# recorded there, or a Renovate bump can leave the build on the old digest.
+pin_for() {
+    awk -v want="$1" '
+        $1 == "-" && $2 == "name:" && $3 == want { found = 1; next }
+        found && $1 == "image:" { image = $2 }
+        found && $1 == "tag:" { tag = $2 }
+        found && $1 == "digest:" { digest = $2 }
+        found && $1 == "digest:" {
+            printf "%s:%s@%s\n", image, tag, digest
+            exit
+        }
+    ' "${REPO_ROOT}/image-versions.yml"
+}
+
+from_stage() {
+    if [[ -n "${1:-}" ]]; then
+        grep -iE "^FROM[[:space:]]+.*[[:space:]]+[Aa][Ss][[:space:]]+${1}([[:space:]]|$)" "${CONTAINERFILE}" | head -n1 | awk '{print $2}'
+    else
+        grep -iE '^FROM[[:space:]]' "${CONTAINERFILE}" | grep -viE '[[:space:]]as[[:space:]]' | head -n1 | awk '{print $2}'
+    fi
+}
+
+@test "pins: the base FROM matches the fedora-bootc pin" {
+    [ "$(from_stage)" = "$(pin_for fedora-bootc)" ]
+}
+
+@test "pins: the common context FROM matches its pin" {
+    [ "$(from_stage common)" = "$(pin_for common)" ]
+}
+
+@test "pins: the brew context FROM matches its pin" {
+    [ "$(from_stage brew)" = "$(pin_for brew)" ]
+}

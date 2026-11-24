@@ -50,7 +50,7 @@ COPY --from=brew /system_files /oci/brew
 
 # Base Image - GNOME included (Fedora official OSTree desktop)
 # Renovate will keep the digest pin up to date.
-FROM quay.io/fedora-ostree-desktops/silverblue:44@sha256:a2bd60c66a949b513c324a66cb48df3de93ecf8f76281f6eb62a02ab82a4d03f
+FROM quay.io/fedora/fedora-bootc:45@sha256:f387c5f622d2f095e23b1587c97a4d4659231df6c8a649329839a9336a99c5e4
 
 # Image identity - these define how bootc, fastfetch, and the ublue ecosystem
 # recognize your image. Change these to match your project name.
@@ -78,6 +78,14 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     /ctx/build/00-image-info.sh
 
 # Set dnf options before build scripts (persists across subsequent RUN layers)
+#
+# dnf5's plugin subcommands (config-manager, copr, ...) ship in the dnf5-plugins
+# package, which the base image does not install, so install it before any of
+# them runs: the options below configure the build, and later phases enable COPRs
+# through the same plugin.
+RUN --mount=type=cache,dst=/var/cache/libdnf5 \
+    dnf5 install -y dnf5-plugins
+
 RUN cp /etc/dnf/dnf.conf /etc/dnf/dnf.conf.tmp \
     && mv /etc/dnf/dnf.conf.tmp /etc/dnf/dnf.conf \
     && dnf5 config-manager setopt keepcache=1 install_weak_deps=0
@@ -159,5 +167,8 @@ LABEL org.opencontainers.image.title="${IMAGE_NAME}" \
 CMD ["/sbin/init"]
 
 ### LINTING
-## Verify final image and contents are correct. --fatal-warnings catches issues.
-RUN bootc container lint --fatal-warnings
+## Verify final image and contents are correct. Aurora runs the final check
+## offline so a passing lint cannot depend on the network. --fatal-warnings
+## catches issues and --no-truncate keeps the full report in the build log.
+RUN --network=none \
+    bootc container lint --fatal-warnings --no-truncate

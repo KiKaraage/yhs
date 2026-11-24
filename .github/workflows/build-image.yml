@@ -19,6 +19,13 @@ on:
     paths-ignore:
       - "**.md"
       - ".github/workflows/*validate*.yml"
+      # Owned by build-packages.yml. config/packages.env is deliberately not
+      # ignored: publishing a package image must build exactly one new OS image.
+      - "packages/**"
+      - "overlay/luma/**"
+      - "scripts/**"
+      - "upstream/luma"
+      - ".github/workflows/build-packages.yml"
   workflow_dispatch:
 
 permissions:
@@ -90,6 +97,8 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          submodules: true
 
       - name: Preflight
         id: preflight

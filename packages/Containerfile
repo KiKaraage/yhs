@@ -1,0 +1,5 @@
+# The package image carries an rpm-md repository and nothing else.
+# Its single layer is the createrepo_c output: Packages/*.rpm and repodata/*.
+# Image builds mount it as the `packages` build context at /run/luma/packages.
+FROM scratch
+COPY repo/ /
