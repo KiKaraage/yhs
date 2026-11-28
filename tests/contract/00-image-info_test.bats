@@ -14,8 +14,8 @@ setup() {
 
     mkdir -p "$(dirname "${OS_RELEASE}")"
     export ROOT_DIR="${SANDBOX}"
-    export IMAGE_NAME="finpilot"
-    export IMAGE_VENDOR="projectbluefin"
+    export IMAGE_NAME="yhs"
+    export IMAGE_VENDOR="kikaraage"
     export UBLUE_IMAGE_TAG="stable"
     export BASE_IMAGE_NAME="silverblue"
     export FEDORA_MAJOR_VERSION="44"
@@ -55,19 +55,19 @@ json_field() {
 
     run python3 -m json.tool "${IMAGE_INFO_JSON}"
     [ "$status" -eq 0 ]
-    [ "$(json_field image-name)" = "finpilot" ]
-    [ "$(json_field image-vendor)" = "projectbluefin" ]
-    [ "$(json_field image-ref)" = "ostree-unverified-image:docker://ghcr.io/projectbluefin/finpilot" ]
+    [ "$(json_field image-name)" = "yhs" ]
+    [ "$(json_field image-vendor)" = "kikaraage" ]
+    [ "$(json_field image-ref)" = "ostree-unverified-image:docker://ghcr.io/kikaraage/yhs" ]
     [ "$(json_field image-tag)" = "stable" ]
     [ "$(json_field base-image-name)" = "silverblue" ]
     [ "$(json_field fedora-version)" = "44" ]
 }
 
 @test "00-image-info: does not create a flavor field from the image name" {
-    export IMAGE_NAME="finpilot-nvidia"
+    export IMAGE_NAME="yhs-nvidia"
     run_script
     [ "$status" -eq 0 ]
-    [ "$(json_field image-ref)" = "ostree-unverified-image:docker://ghcr.io/projectbluefin/finpilot-nvidia" ]
+    [ "$(json_field image-ref)" = "ostree-unverified-image:docker://ghcr.io/kikaraage/yhs-nvidia" ]
     run python3 -c 'import json,sys; sys.exit("image-flavor" in json.load(open(sys.argv[1])))' "${IMAGE_INFO_JSON}"
     [ "$status" -eq 0 ]
 }
@@ -77,12 +77,12 @@ json_field() {
     run_script
     [ "$status" -eq 0 ]
 
-    grep -q '^VARIANT_ID="finpilot"$' "${OS_RELEASE}"
-    grep -q '^PRETTY_NAME="finpilot (Version: 44.20260907.1)"$' "${OS_RELEASE}"
-    grep -q '^NAME="finpilot"$' "${OS_RELEASE}"
+    grep -q '^VARIANT_ID="yhs"$' "${OS_RELEASE}"
+    grep -q '^PRETTY_NAME="yhs (Version: 44.20260907.1)"$' "${OS_RELEASE}"
+    grep -q '^NAME="yhs"$' "${OS_RELEASE}"
     grep -q '^VERSION="44.20260907.1 (silverblue)"$' "${OS_RELEASE}"
     grep -q '^OSTREE_VERSION="44.20260907.1"$' "${OS_RELEASE}"
-    grep -q '^IMAGE_ID="finpilot"$' "${OS_RELEASE}"
+    grep -q '^IMAGE_ID="yhs"$' "${OS_RELEASE}"
     grep -q '^IMAGE_VERSION="44.20260907.1"$' "${OS_RELEASE}"
     grep -q '^DEFAULT_HOSTNAME="fedora"$' "${OS_RELEASE}"
     grep -q '^ID=fedora$' "${OS_RELEASE}"
@@ -93,28 +93,28 @@ json_field() {
     run_script
     [ "$status" -eq 0 ]
 
-    grep -q '^HOME_URL="https://github.com/projectbluefin/finpilot"$' "${OS_RELEASE}"
-    grep -q '^DOCUMENTATION_URL="https://github.com/projectbluefin/finpilot/blob/main/README.md"$' "${OS_RELEASE}"
-    grep -q '^SUPPORT_URL="https://github.com/projectbluefin/finpilot/issues"$' "${OS_RELEASE}"
-    grep -q '^BUG_REPORT_URL="https://github.com/projectbluefin/finpilot/issues/new"$' "${OS_RELEASE}"
+    grep -q '^HOME_URL="https://github.com/kikaraage/yhs"$' "${OS_RELEASE}"
+    grep -q '^DOCUMENTATION_URL="https://github.com/kikaraage/yhs/blob/main/README.md"$' "${OS_RELEASE}"
+    grep -q '^SUPPORT_URL="https://github.com/kikaraage/yhs/issues"$' "${OS_RELEASE}"
+    grep -q '^BUG_REPORT_URL="https://github.com/kikaraage/yhs/issues/new"$' "${OS_RELEASE}"
     grep -q '^ID_LIKE="fedora"$' "${OS_RELEASE}"
 }
 
 @test "00-image-info: permits explicit URL overrides without changing base identity" {
-    export HOME_URL="https://finpilot.example"
-    export DOCUMENTATION_URL="https://docs.finpilot.example"
-    export SUPPORT_URL="https://support.finpilot.example"
-    export BUG_REPORT_URL="https://bugs.finpilot.example"
+    export HOME_URL="https://yhs.example"
+    export DOCUMENTATION_URL="https://docs.yhs.example"
+    export SUPPORT_URL="https://support.yhs.example"
+    export BUG_REPORT_URL="https://bugs.yhs.example"
     run_script
     [ "$status" -eq 0 ]
 
-    grep -q '^PRETTY_NAME="finpilot (Version: stable)"$' "${OS_RELEASE}"
-    grep -q '^NAME="finpilot"$' "${OS_RELEASE}"
+    grep -q '^PRETTY_NAME="yhs (Version: stable)"$' "${OS_RELEASE}"
+    grep -q '^NAME="yhs"$' "${OS_RELEASE}"
     grep -q '^ID_LIKE="fedora"$' "${OS_RELEASE}"
-    grep -q '^HOME_URL="https://finpilot.example"$' "${OS_RELEASE}"
-    grep -q '^DOCUMENTATION_URL="https://docs.finpilot.example"$' "${OS_RELEASE}"
-    grep -q '^SUPPORT_URL="https://support.finpilot.example"$' "${OS_RELEASE}"
-    grep -q '^BUG_REPORT_URL="https://bugs.finpilot.example"$' "${OS_RELEASE}"
+    grep -q '^HOME_URL="https://yhs.example"$' "${OS_RELEASE}"
+    grep -q '^DOCUMENTATION_URL="https://docs.yhs.example"$' "${OS_RELEASE}"
+    grep -q '^SUPPORT_URL="https://support.yhs.example"$' "${OS_RELEASE}"
+    grep -q '^BUG_REPORT_URL="https://bugs.yhs.example"$' "${OS_RELEASE}"
 }
 
 @test "00-image-info: does not write BUILD_ID from a supplied revision" {
@@ -150,14 +150,14 @@ json_field() {
 }
 
 @test "00-image-info: escapes JSON values" {
-    export IMAGE_PRETTY_NAME='Finpilot "OS"'
-    export IMAGE_NAME='finpilot"test'
+    export IMAGE_PRETTY_NAME='Yhs "OS"'
+    export IMAGE_NAME='yhs"test'
     run_script
     [ "$status" -eq 0 ]
 
     run python3 -m json.tool "${IMAGE_INFO_JSON}"
     [ "$status" -eq 0 ]
-    [ "$(json_field image-name)" = 'finpilot"test' ]
+    [ "$(json_field image-name)" = 'yhs"test' ]
 }
 
 @test "00-image-info: fails before writing when required identity is missing" {
@@ -192,22 +192,22 @@ json_field() {
 }
 
 @test "00-image-info: replaces an existing key whose value contains sed metacharacters" {
-    export HOME_URL="https://finpilot.example/?a=1&b=2|c"
+    export HOME_URL="https://yhs.example/?a=1&b=2|c"
     run_script
     [ "$status" -eq 0 ]
 
-    grep -qF 'HOME_URL="https://finpilot.example/?a=1&b=2|c"' "${OS_RELEASE}"
+    grep -qF 'HOME_URL="https://yhs.example/?a=1&b=2|c"' "${OS_RELEASE}"
 }
 
 @test "00-image-info: appends an absent key without sed escapes" {
     # The sed escapes are only for the replacement branch. A key the base
     # os-release does not carry is appended, and must land verbatim.
-    export HOME_URL="https://finpilot.example/?a=1&b=2|c"
+    export HOME_URL="https://yhs.example/?a=1&b=2|c"
     sed -i '/^HOME_URL=/d' "${OS_RELEASE}"
     run_script
     [ "$status" -eq 0 ]
 
-    grep -qF 'HOME_URL="https://finpilot.example/?a=1&b=2|c"' "${OS_RELEASE}"
+    grep -qF 'HOME_URL="https://yhs.example/?a=1&b=2|c"' "${OS_RELEASE}"
     run grep -c '^HOME_URL=' "${OS_RELEASE}"
     [ "$output" -eq 1 ]
 }

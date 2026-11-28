@@ -1,7 +1,7 @@
 ###############################################################################
 # PROJECT NAME CONFIGURATION
 ###############################################################################
-# Name: finpilot
+# Name: yhs
 #
 # The authoritative name at publish time is the repository name: build-image.yml
 # derives IMAGE_NAME from ${{ github.event.repository.name }} and pushes the
@@ -35,7 +35,7 @@
 
 # OCI context images - imported below and pinned directly in their FROM lines.
 # The base image is pinned in the FROM line below and updated by Renovate.
-FROM ghcr.io/projectbluefin/common:latest@sha256:cea31681327949c5731122cccc5b87154af55c9ba6aa571a463c52d9f4f6a62b AS common
+FROM ghcr.io/projectbluefin/common:latest@sha256:e702c2b00ebf59b12facc607b1c721b2424994f59d56ebc7a4658767fa5f7b74 AS common
 FROM ghcr.io/ublue-os/brew:latest@sha256:9c51c948d48de69b0fadfb3d97dc1a7eaa91a4e5a2af7b2b6626fdd8fca362b1 AS brew
 
 # Context stage - combine local and imported OCI container resources
@@ -50,12 +50,12 @@ COPY --from=brew /system_files /oci/brew
 
 # Base Image - GNOME included (Fedora official OSTree desktop)
 # Renovate will keep the digest pin up to date.
-FROM quay.io/fedora-ostree-desktops/silverblue:44@sha256:6a0ddfb53aff94317025430b9c06362a89178fb39267838829a750d5fdbed5ee
+FROM quay.io/fedora-ostree-desktops/silverblue:44@sha256:cd54d248363c1f76613037969e3849337be4ae20cbc5f7e5d862706542e96dc3
 
 # Image identity - these define how bootc, fastfetch, and the ublue ecosystem
 # recognize your image. Change these to match your project name.
-ARG IMAGE_NAME="finpilot"
-ARG IMAGE_VENDOR="projectbluefin"
+ARG IMAGE_NAME="yhs"
+ARG IMAGE_VENDOR="kikaraage"
 ARG UBLUE_IMAGE_TAG="stable"
 # Supplied by `just build` from the base image's FROM line.
 ARG BASE_IMAGE_NAME=""

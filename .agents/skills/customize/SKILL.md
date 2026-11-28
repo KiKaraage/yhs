@@ -1,8 +1,8 @@
 ---
 name: customize
 description: >-
-  Decide where a package, app, or command belongs — dnf5 at build time,
-  Homebrew, Flatpak, or ujust — and how each is validated. Use when adding
+  Decide where a package, app, or command belongs: dnf5 at build time,
+  Homebrew, Flatpak, or ujust, plus how each is validated. Use when adding
   or removing something from the image.
 ---
 
@@ -19,48 +19,35 @@ description: >-
 | A system file: unit, preset, tmpfiles.d | `custom/files/` | at build time |
 | Per-user config for new accounts | `custom/config/` | at build time, into `/etc/skel` |
 
-The dividing line is who decides and when: build time for what the image must
-have, runtime for what the user chooses.
+The dividing line is who decides and when: build time for what the image must have, runtime for what the user chooses.
 
 ## By destination
 
 ### Build-time packages
 
-`build/20-packages-and-services.sh`. Use `dnf5`, always with `-y`, and disable
-any repository you enable. [build/README.md](../../../build/README.md) has the
-phase map.
+`build/20-packages-and-services.sh`. Use `dnf5`, always with `-y`, and disable any repository you enable. [build/README.md](../../../build/README.md) has the phase map.
 
-Prefer a package the base already ships. When a COPR is unavoidable,
-`copr_install_isolated` enables and disables it for you.
+Prefer a package the base already ships. When a COPR is unavoidable, `copr_install_isolated` enables and disables it for you.
 
 ### Homebrew
 
-Brewfiles in `custom/brew/`, plus a `ujust` recipe so users install it by name.
-[custom/brew/README.md](../../../custom/brew/README.md) has the format.
+Brewfiles in `custom/brew/`, plus a `ujust` recipe so users install it by name. [custom/brew/README.md](../../../custom/brew/README.md) has the format.
 
 ### Flatpak
 
-Preinstall declarations in `custom/flatpaks/`. The app must exist on Flathub;
-`just validate-flatpaks` checks.
-[custom/flatpaks/README.md](../../../custom/flatpaks/README.md) has the format and
-the first-boot behaviour.
+Preinstall declarations in `custom/flatpaks/`. The app must exist on Flathub; `just validate-flatpaks` checks. [custom/flatpaks/README.md](../../../custom/flatpaks/README.md) has the format and the first-boot behaviour.
 
 ### ujust
 
-Recipes in `custom/ujust/`. No `dnf5` or `rpm` — the image is immutable.
-[custom/ujust/README.md](../../../custom/ujust/README.md) has the recipe shape.
+Recipes in `custom/ujust/`. No `dnf5` or `rpm`: the image is immutable. [custom/ujust/README.md](../../../custom/ujust/README.md) has the recipe shape.
 
 ### System files and user config
 
-`custom/files/` mirrors `/`; `custom/config/` seeds `/etc/skel/.config/`. Each
-directory's README has the semantics.
+`custom/files/` mirrors `/`; `custom/config/` seeds `/etc/skel/.config/`. Each directory's README has the semantics.
 
 ## Removing something
 
-The reverse of adding: delete the line or the file, then check nothing still
-references it. A package removed from the package phase may still arrive as a
-dependency or from an overlay; `bootc container lint` and the image build catch
-the obvious cases.
+The reverse of adding: delete the line or the file, then check nothing still references it. A package removed from the package phase may still arrive as a dependency or from an overlay; `bootc container lint` and the image build catch the obvious cases.
 
 ## Validate
 
@@ -71,5 +58,4 @@ just check
 just build
 ```
 
-CI runs `validate-brewfiles`, `validate-flatpaks`, and `validate-justfiles` on
-every pull request.
+CI runs `validate-brewfiles`, `validate-flatpaks`, and `validate-justfiles` on every pull request.

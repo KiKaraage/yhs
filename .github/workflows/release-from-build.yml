@@ -1,8 +1,8 @@
 name: Reusable Release
 # Local copy of projectbluefin/actions/.github/workflows/reusable-release.yml
-# pinned at 41992083f437357010da2ea072ef353d982ae369 (v1). Finpilot calls this
+# pinned at 41992083f437357010da2ea072ef353d982ae369 (v1). yhs calls this
 # only in image-release (artifact) mode. It differs from the pinned reusable in
-# three ways, all to bind the SBOM to the exact promoted image (finpilot #681):
+# three ways, all to bind the SBOM to the exact promoted image (upstream #681):
 #   * the $/ self-repo action references below are expanded to the pinned
 #     projectbluefin/actions SHA, because this file owns no bootc-build actions;
 #   * the build run is selected by the promoted digest, resolved here via
@@ -320,7 +320,7 @@ jobs:
           # recorded the same digest in the SBOM artifact (it is the sole
           # builder of :testing and the promote copies it by digest). Match the
           # download on it so a build that finished after the promotion cannot
-          # have its inventory attached to this released image (finpilot #681).
+          # have its inventory attached to this released image (upstream #681).
           EXPECTED_DIGEST="$(skopeo inspect --format '{{.Digest}}' \
             "docker://${IMAGE}:${STREAM_NAME}" 2>/dev/null || echo '')"
           if [[ -z "${EXPECTED_DIGEST}" ]]; then
@@ -414,7 +414,7 @@ jobs:
           # Minimal valid SPDX JSON — used when inline Syft generation fails (e.g. OOM).
           # The release proceeds; SBOM contents will be empty but the release is not blocked.
           cat > "sbom-current/${IMAGE_NAME}.sbom.json" << SPDXEOF
-          {"spdxVersion":"SPDX-2.3","dataLicense":"CC0-1.0","SPDXID":"SPDXRef-DOCUMENT","name":"${IMAGE_NAME}","documentNamespace":"https://github.com/projectbluefin/${IMAGE_NAME}/sbom-fallback","packages":[],"relationships":[{"spdxElementId":"SPDXRef-DOCUMENT","relationshipType":"DESCRIBES","relatedSpdxElement":"SPDXRef-DOCUMENT"}],"documentDescribes":["SPDXRef-DOCUMENT"]}
+          {"spdxVersion":"SPDX-2.3","dataLicense":"CC0-1.0","SPDXID":"SPDXRef-DOCUMENT","name":"${IMAGE_NAME}","documentNamespace":"https://github.com/kikaraage/${IMAGE_NAME}/sbom-fallback","packages":[],"relationships":[{"spdxElementId":"SPDXRef-DOCUMENT","relationshipType":"DESCRIBES","relatedSpdxElement":"SPDXRef-DOCUMENT"}],"documentDescribes":["SPDXRef-DOCUMENT"]}
           SPDXEOF
           echo "WARNING: Using placeholder SBOM — inline generation failed (OOM or runner eviction)"
 
@@ -430,7 +430,7 @@ jobs:
           path: sbom-current
 
       - name: Create release
-        uses: projectbluefin/actions/bootc-build/create-release@9eccc77361d4e1bdc8c412dd3b6573d8680d2246 # v1
+        uses: projectbluefin/actions/bootc-build/create-release@73eb71a1b99a24b984d997ed6048120be5bf8936 # v1
         with:
           sbom-path: sbom-current/${{ steps.image_name.outputs.image_name }}.sbom.json
           tag: ${{ steps.meta.outputs.tag }}
@@ -466,7 +466,7 @@ jobs:
 
       - name: Generate release notes
         id: release-notes
-        uses: projectbluefin/actions/bootc-build/generate-release-notes@9eccc77361d4e1bdc8c412dd3b6573d8680d2246 # v1
+        uses: projectbluefin/actions/bootc-build/generate-release-notes@73eb71a1b99a24b984d997ed6048120be5bf8936 # v1
         with:
           tag: ${{ inputs.tag }}
           output-file: CHANGELOG.md
