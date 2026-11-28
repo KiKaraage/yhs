@@ -11,9 +11,9 @@ description: >-
 ## Before a pull request
 
 - [ ] Conventional Commit message.
-- [ ] `just lint` — shellcheck on every tracked script.
-- [ ] `just check` — Justfile syntax.
-- [ ] `just test-unit` — the suite.
+- [ ] `just lint`: shellcheck on every tracked script.
+- [ ] `just check`: Justfile syntax.
+- [ ] `just test-unit`: the suite.
 - [ ] `just validate-brewfiles` / `just validate-flatpaks` if those changed.
 - [ ] `just build` if the image changed.
 
@@ -41,8 +41,7 @@ CI runs the same checks; running them locally only makes the pull request quiet.
 
 ## Runtime
 
-The two most common first-boot surprises — no Flatpaks, and no `brew` — are in
-the README's Troubleshooting section.
+The README's Troubleshooting section covers the two most common first-boot surprises: no Flatpaks, and no `brew`.
 
 | Symptom | Cause | Fix |
 |---|---|---|
@@ -50,5 +49,4 @@ the README's Troubleshooting section.
 
 ## Capturing what you learned
 
-When a fix here was non-obvious, put it in the skill that owns the area, in the
-same pull request. That is the only home for durable learning.
+When a fix here was non-obvious, put it in the skill that owns the area, in the same pull request. That is the only home for durable learning.
